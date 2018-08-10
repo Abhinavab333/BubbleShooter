@@ -1,0 +1,140 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+	<title>::abc::</title>
+    <script src="phaser.js"></script>
+    
+</head>
+<body>
+
+<script type="text/javascript">
+	var gamefield;
+	var player;
+	var cursors;
+	var bullets;
+	var bulletTime=0;
+	var fireButton;
+	//add enemies
+	var enemies;
+	// for scores
+	var score=0;
+	var scoreText;
+	var winText;
+
+
+var mgame = new Phaser.Game(1400,700, Phaser.AUTO, '');
+var mainState={
+	preload:function(){
+		mgame.load.image('back',"assets/sky.png");
+		mgame.load.image('player',"assets/diamond.png");
+        mgame.load.image('bullet',"assets/download.png");
+        mgame.load.image('enemy',"assets/enemy.png");
+	},
+
+	create:function(){
+		gamefield=mgame.add.tileSprite(0,0,1400,700,'back');
+		player=mgame.add.sprite(mgame.world.centerX,mgame.world.centerY,'player');
+		mgame.physics.enable(player,Phaser.Physics.ARCADE);
+		cursors= mgame.input.keyboard.createCursorKeys();
+		//creating bullets
+		bullets=mgame.add.group();
+		bullets.enableBody=true;
+		bullets.physicsBodyType=Phaser.Physics.ARCADE;
+		bullets.createMultiple(10,'bullet');
+		bullets.setAll('anchor.x',1);
+		bullets.setAll('anchor.y',1);
+		bullets.setAll('outOfBoundsKill',true);
+		bullets.setAll('checkWorldBounds',true);
+		//making firebutton
+		fireButton=mgame.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+		//creating enemies
+		enemies=mgame.add.group();
+		enemies.enableBody=true;
+		enemies.physicsBodyType=Phaser.Physics.ARCADE;
+		createEnemies();
+
+		// creating score related text
+			scoreText=mgame.add.text(80,450,'Score:',{font:'32px Arial',fill:'white'});
+             winText=mgame.add.text(mgame.world.centerX,mgame.world.centerY,'You Win',{font:'32px Arial',fill:'white'});
+	          winText.visible=false;
+		 	},
+
+	update:function(){
+		mgame.physics.arcade.overlap(bullets,enemies,collision,null,this);
+		player.body.velocity.x=0;
+		player.body.velocity.y=0;
+		
+		//gamefield.tilePosition.x +=2;
+		gamefield.tilePosition.y +=2;
+		if(cursors.left.isDown)
+		{
+			player.body.velocity.x = -550;
+		}
+		if(cursors.right.isDown)
+		{
+			player.body.velocity.x =550 ;
+		}
+		/*if(cursors.up.isDown){
+			player.body.velocity.y = -550;
+		}
+		if(cursors.down.isDown){
+			player.body.velocity.y = 550;
+		}*/
+		if(fireButton.isDown){
+			fireBullet();
+		}
+
+		// for scoretext
+		scoreText.text= 'Score:' +score;
+		if (score ==4000){
+			winText.visible=true;
+			scoreText.visible=false;
+		}
+
+	},
+};
+function fireBullet(){
+	if(mgame.time.now>bulletTime){
+		bullet=bullets.getFirstExists(false);
+		if(bullet){
+			// reset position of player if no bullet fired
+			bullet.reset(player.x +14,player.y);
+			bullet.body.velocity.y = -450;
+			bulletTime=mgame.time.now +200;
+		}
+	}
+}
+
+//function for createing enemies
+function createEnemies(){
+	for (var y=0;y<6;y++)
+	{
+		for (var x=0;x<10;x++)
+		{
+			var enemy=enemies.create(x*48,y*50,'enemy');
+			enemy.anchor.setTo(0.3,0.7);
+		}
+	}
+	enemies.x=100;
+	enemies.y=50;
+	var tween =mgame.add.tween(enemies).to({x:200},2000,Phaser.Easing.Linear.None,true,0,1000,true);
+	tween.onLoop.add(descend,this);
+} 
+function descend(){
+	enemies.y +=10;
+}
+// function for collision
+function collision(bullets,enemy){
+	bullet.kill();
+	enemy.kill();
+	score +=100;
+}
+mgame.state.add('mainstate',mainState);
+mgame.state.start('mainstate');
+
+</script>
+
+</body>
+</html>
